@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Market price benchmarks: publicly readable for client-side & cloud audit comparisons.
+    match /price_benchmarks/{benchmarkId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Anonymised audit reports: publicly readable and creatable for the hackathon demo,
+    // without allowing arbitrary mutation or deletion of published reports.
+    match /audit_reports/{reportId} {
+      allow read, create: if true;
+      allow update, delete: if false;
+    }
+
+    // Deny access to all other collections by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
