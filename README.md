@@ -11,6 +11,7 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build
 npm run lint
+npm test         # node --test, no extra deps
 ```
 
 Requires Node.js 18+. Design rules live in [DESIGN.md](DESIGN.md).
@@ -25,31 +26,45 @@ Requires Node.js 18+. Design rules live in [DESIGN.md](DESIGN.md).
 To verify local inference (dev server only), open the DevTools console and run:
 
 ```js
-await ghostline.testNano()   // → { output, ms, simulated: false }
+await ghostline.testNano()   // → { output, entities, ms, simulated: false }
 ```
 
 The first call starts the model download. Without Nano, the app uses a local pattern filter (`simulated: true`). Raw text never leaves the device in either case.
 
+## How local redaction works
+
+```
+raw text ─► PII spans: Gemini Nano (JSON schema) + regex safety net ─► redacted text
+         ─► line items: CSV columns │ Gemini Nano │ line parser
+         ─► final scrub of every string ─► anonymous payload { projectTitle, currency, items[] }
+```
+
+- Nano only **reports** which spans are personal data; the replacement is done in code, so prices can't be altered.
+- The regex net catches emails, phones, IDs and names after cues like "Mr." or "Approved by" even if Nano misses them.
+- The UI shows the observed number of network requests during redaction (PerformanceObserver). It should always be 0.
+
 ## Privacy rule
 
-Raw contract text must only reach `src/services/localNanoService.js`. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`. `PREFER_ON_DEVICE` silently falls back to the cloud, which would send PII.
+Raw contract text must only reach `src/services/localPipeline.js` and `localNanoService.js`. Only `result.payload` may be handed to the cloud. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`, because that silently falls back to the cloud with PII.
 
 ## Project structure
 
 ```
 src/
 ├── components/
-│   ├── Navbar.jsx
-│   └── HybridStatusBadge.jsx      # on-device / fallback / cloud status
+│   ├── Navbar.jsx · HybridStatusBadge.jsx   # always-visible local / cloud status
+│   ├── SplitRedactionView.jsx               # original ↔ redacted, CSV upload
+│   ├── RedactedText.jsx                     # ink redaction bars
+│   └── HandoffPreview.jsx                   # what stays here vs. what leaves
 ├── services/
-│   └── localNanoService.js        # Prompt API wrapper + local fallback
-├── pages/HomePage.jsx
-├── App.jsx · main.jsx · index.css # design tokens in index.css (@theme)
-├── data/ · utils/                 # Phase 2+
-scripts/                           # seedFirestore.js (Kahfi)
+│   ├── localNanoService.js                  # Prompt API: PII detection, item extraction
+│   ├── localPipeline.js                     # raw text → anonymous payload
+│   ├── firebase.js · benchmarkService.js    # Kahfi
+├── utils/ redaction · itemExtraction · csvParser · currencyFormatter
+├── data/seedBenchmarks.json
+tests/                                       # npm test
+scripts/seedFirestore.js
 ```
-
-Kahfi's Firebase files (`src/services/firebase.js`, `firebase.json`, `firestore.rules`, `.env.example`) slot into this layout.
 
 ## Sprint status
 
@@ -57,5 +72,9 @@ Kahfi's Firebase files (`src/services/firebase.js`, `firebase.json`, `firestore.
 |----|------|-------|--------|
 | T01 | Repo & React + Vite + Tailwind setup | Denin | ✅ Done |
 | T02 | Verify Chrome Gemini Nano local inference | Denin | 🟡 Code done; run `ghostline.testNano()` on a Nano-enabled Chrome |
-| T03 | Firebase setup (Firestore, App Check, AI Logic, Hosting) | Kahfi | ⬜ |
-| T04 | Seed Firestore with 30–50 USD benchmarks | Kahfi | ⬜ |
+| T03 | Firebase setup (Firestore, App Check, AI Logic, Hosting) | Kahfi | ✅ Merged (PR #1) |
+| T04 | Seed Firestore with 30–50 USD benchmarks | Kahfi | ✅ 40 benchmarks |
+| T05 | Split-screen redaction UI & CSV/text input | Denin | ✅ Done |
+| T06 | Gemini Nano PII redaction & JSON extraction | Denin | 🟡 Done; tested with mocked Nano + fallback, needs a run on real Nano |
+| T07 | Local vs. cloud & "0 PII sent" indicators | Denin | ✅ Done |
+| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ⬜ |

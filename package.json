@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "seed:benchmarks": "node --env-file=.env scripts/seedFirestore.js"
+    "seed:benchmarks": "node --env-file=.env scripts/seedFirestore.js",
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
     "firebase": "^13.4.0",

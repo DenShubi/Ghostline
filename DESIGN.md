@@ -69,9 +69,13 @@
 
 ## Components and states
 
-- Status (header): 8px square marker + text label. checking (border) / on-device Gemini Nano (accent) / on-device basic filter (warning) / cloud (cloud). No pulse.
+- Status (header): 8px square marker + text label. checking (border) / on-device Gemini Nano (accent) / on-device basic filter (warning) / redacting, label turns fg (accent) / cloud (cloud). No pulse.
 - Links and disclosure: fg text, border-coloured underline that darkens to fg on hover.
-- Buttons (Phase 2): primary = ink fill, paper text; secondary = 1px border; one primary per view.
+- Buttons: primary = ink fill, paper text, 44px tall; secondary = 1px border, darkens to fg on hover; one primary per view. Busy state swaps the label ("Redacting…", "Reading line items…") and disables.
+- Split workspace: one 1px-bordered frame split by a hairline, original on `bg`, redacted on `surface`. Each half has a 44px header row (label left, action or count right). Stacks on mobile.
+- Redacted text: monospace, PII replaced by ink bars sized to the hidden text in `ch` (capped at 32ch), `role="img"` with the PII type as label.
+- Handoff preview: a two-row definition list (kept here / sent to the cloud), then a ruled table. Text left, numbers right, `tabular-nums`. The Specs column is hidden below `sm` so the numbers never scroll off screen.
+- Empty / loading / error: empty right panel says where output will appear; loading is the button label plus status line; errors say that nothing was sent.
 - Focus ring: 2px bg gap + 2px accent box-shadow.
 
 ## Motion
@@ -106,7 +110,9 @@ Implemented as Tailwind v4 `@theme` in `src/index.css`.
 - Date: 2026-11-21 | Result: pass after fixing 3 issues
 - Fixed: headline broke mid-phrase; excerpt scrolled sideways on mobile and hid the price; page overflowed 11px on mobile.
 - Removed from v0: dark navy theme, pulsing status dots, rounded-2xl panels, Inter, developer diagnostics panel.
+- Phase 2 (2026-11-21): pass after fixing 1 issue. Line-item table scrolled sideways on mobile and hid qty and price; Specs column now hides below `sm`.
 
 ## Changelog
 
+- 2026-11-21: Phase 2 workspace. Split redaction view, ink redaction bars on real output, handoff preview table, busy status. The static specimen line was removed because the live output now shows the signature.
 - 2026-11-21: initial system; replaced the developer diagnostics page with a minimal user-facing shell.
