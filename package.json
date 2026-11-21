@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:benchmarks": "node --env-file=.env scripts/seedFirestore.js"
   },
   "dependencies": {
+    "firebase": "^13.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

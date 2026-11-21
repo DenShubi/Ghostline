@@ -1,0 +1,362 @@
+[
+  {
+    "category": "IT Hardware",
+    "itemName": "Standard Student Laptop 14-inch",
+    "fairPriceMin": 450,
+    "fairPriceMax": 600,
+    "fairPriceAvg": 525,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "24-inch Monitor",
+    "fairPriceMin": 130,
+    "fairPriceMax": 190,
+    "fairPriceAvg": 160,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "Monochrome Laser Office Printer",
+    "fairPriceMin": 220,
+    "fairPriceMax": 340,
+    "fairPriceAvg": 280,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "HD Classroom & Conference Projector",
+    "fairPriceMin": 450,
+    "fairPriceMax": 650,
+    "fairPriceAvg": 550,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "24-Port Managed Gigabit Network Switch",
+    "fairPriceMin": 180,
+    "fairPriceMax": 300,
+    "fairPriceAvg": 240,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "Enterprise Wi-Fi 6 Access Point",
+    "fairPriceMin": 140,
+    "fairPriceMax": 220,
+    "fairPriceAvg": 180,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "Business Desktop Workstation (i5/16GB/512GB)",
+    "fairPriceMin": 650,
+    "fairPriceMax": 850,
+    "fairPriceAvg": 750,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "1500VA Uninterruptible Power Supply (UPS)",
+    "fairPriceMin": 180,
+    "fairPriceMax": 260,
+    "fairPriceAvg": 220,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "10-inch Institutional Tablet (64GB Wi-Fi)",
+    "fairPriceMin": 240,
+    "fairPriceMax": 340,
+    "fairPriceAvg": 290,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "IT Hardware",
+    "itemName": "1080p Conference Room Webcam & Mic Kit",
+    "fairPriceMin": 90,
+    "fairPriceMax": 150,
+    "fairPriceAvg": 120,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Infrared Thermometer",
+    "fairPriceMin": 25,
+    "fairPriceMax": 45,
+    "fairPriceAvg": 35,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Surgical Masks (Box of 50)",
+    "fairPriceMin": 8,
+    "fairPriceMax": 16,
+    "fairPriceAvg": 12,
+    "unit": "box",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Multi-Parameter Patient Monitor",
+    "fairPriceMin": 1200,
+    "fairPriceMax": 2000,
+    "fairPriceAvg": 1600,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Manual Crank Hospital Bed with Mattress",
+    "fairPriceMin": 750,
+    "fairPriceMax": 1150,
+    "fairPriceAvg": 950,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Digital Upper-Arm Blood Pressure Monitor",
+    "fairPriceMin": 45,
+    "fairPriceMax": 85,
+    "fairPriceAvg": 65,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Fingertip Pulse Oximeter",
+    "fairPriceMin": 20,
+    "fairPriceMax": 40,
+    "fairPriceAvg": 30,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Nitrile Examination Gloves (Box of 100)",
+    "fairPriceMin": 10,
+    "fairPriceMax": 18,
+    "fairPriceAvg": 14,
+    "unit": "box",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Automated External Defibrillator (AED)",
+    "fairPriceMin": 1300,
+    "fairPriceMax": 1900,
+    "fairPriceAvg": 1600,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "Folding Standard Transport Wheelchair",
+    "fairPriceMin": 180,
+    "fairPriceMax": 300,
+    "fairPriceAvg": 240,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Medical Equipment",
+    "itemName": "5L Medical Oxygen Concentrator",
+    "fairPriceMin": 550,
+    "fairPriceMax": 850,
+    "fairPriceAvg": 700,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Health Procurement Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Ergonomic Office Chair",
+    "fairPriceMin": 220,
+    "fairPriceMax": 360,
+    "fairPriceAvg": 290,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Electric Height-Adjustable Standing Desk",
+    "fairPriceMin": 350,
+    "fairPriceMax": 550,
+    "fairPriceAvg": 450,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "A4 Copy Paper (Case of 5 Reams)",
+    "fairPriceMin": 28,
+    "fairPriceMax": 42,
+    "fairPriceAvg": 35,
+    "unit": "box",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Magnetic Dry-Erase Whiteboard (4x6 ft)",
+    "fairPriceMin": 110,
+    "fairPriceMax": 190,
+    "fairPriceAvg": 150,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "4-Drawer Steel Vertical Filing Cabinet",
+    "fairPriceMin": 210,
+    "fairPriceMax": 330,
+    "fairPriceAvg": 270,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Cross-Cut Office Paper Shredder (18-Sheet)",
+    "fairPriceMin": 140,
+    "fairPriceMax": 220,
+    "fairPriceAvg": 180,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Standard Laser Printer Toner Cartridge",
+    "fairPriceMin": 65,
+    "fairPriceMax": 115,
+    "fairPriceAvg": 90,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Conference Room Table (8-Person)",
+    "fairPriceMin": 550,
+    "fairPriceMax": 850,
+    "fairPriceAvg": 700,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Thermal Laminator Machine (A3/A4)",
+    "fairPriceMin": 55,
+    "fairPriceMax": 95,
+    "fairPriceAvg": 75,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Office Supplies",
+    "itemName": "Heavy-Duty Metal Stapler & Supply Kit",
+    "fairPriceMin": 22,
+    "fairPriceMax": 38,
+    "fairPriceAvg": 30,
+    "unit": "set",
+    "sourceNote": "US GSA / Public Market Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "Student Desk & Chair Set",
+    "fairPriceMin": 110,
+    "fairPriceMax": 170,
+    "fairPriceAvg": 140,
+    "unit": "set",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "65-inch Smart Interactive Board",
+    "fairPriceMin": 1600,
+    "fairPriceMax": 2400,
+    "fairPriceAvg": 2000,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "Classroom Audio & PA Speaker System",
+    "fairPriceMin": 320,
+    "fairPriceMax": 520,
+    "fairPriceAvg": 420,
+    "unit": "set",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "30-Device Mobile Laptop Charging Cart",
+    "fairPriceMin": 750,
+    "fairPriceMax": 1150,
+    "fairPriceAvg": 950,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "Student Compound Light Microscope",
+    "fairPriceMin": 140,
+    "fairPriceMax": 240,
+    "fairPriceAvg": 190,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "Teacher Podium & Lecture Desk",
+    "fairPriceMin": 240,
+    "fairPriceMax": 380,
+    "fairPriceAvg": 310,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "HD Classroom Document Camera",
+    "fairPriceMin": 150,
+    "fairPriceMax": 250,
+    "fairPriceAvg": 200,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "5-Shelf Steel Classroom Bookcase",
+    "fairPriceMin": 180,
+    "fairPriceMax": 280,
+    "fairPriceAvg": 230,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "STEM Robotics Starter Kit (Classroom Pack)",
+    "fairPriceMin": 280,
+    "fairPriceMax": 440,
+    "fairPriceAvg": 360,
+    "unit": "set",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  },
+  {
+    "category": "Education & Classroom",
+    "itemName": "Scientific Graphing Calculator",
+    "fairPriceMin": 90,
+    "fairPriceMax": 130,
+    "fairPriceAvg": 110,
+    "unit": "unit",
+    "sourceNote": "US GSA / Public Education Procurement Avg 2026"
+  }
+]
