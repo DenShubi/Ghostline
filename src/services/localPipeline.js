@@ -9,7 +9,7 @@
  * observed count (PerformanceObserver), shown in the UI as proof.
  */
 
-import { canRunNano, detectPIIWithNano, extractItemsWithNano, getNanoAvailability } from './localNanoService.js'
+import { detectPIIWithNano, extractItemsWithNano, getNanoAvailability } from './localNanoService.js'
 import { redactText, scrubPayload } from '../utils/redaction.js'
 import { buildPayload, extractItemsHeuristic } from '../utils/itemExtraction.js'
 import { csvToItems, looksLikeCSV } from '../utils/csvParser.js'
@@ -32,44 +32,71 @@ function watchNetwork() {
   }
 }
 
+const NANO_TIMEOUT_MS = 25_000
+
+/**
+ * Resolve with `promise`, or reject as soon as `signal` aborts, even if the
+ * underlying API ignores the signal. Keeps a stuck model from hanging the UI.
+ */
+function untilAborted(promise, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) return reject(signal.reason)
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+    promise.then(resolve, reject)
+  })
+}
+
 /**
  * @param {string} text raw input (never leaves this function except to the local model)
  * @param {object} [opts]
  * @param {(stage: 'redacting'|'extracting', partial?: object) => void} [opts.onStage]
- * @param {(fraction: number) => void} [opts.onDownloadProgress]
  * @param {AbortSignal} [opts.signal]
+ * @param {number} [opts.nanoTimeoutMs] per model step
+ *
+ * Gemini Nano is only used when it is fully downloaded ("available"). While it
+ * is missing or still downloading, the basic filter runs immediately and
+ * `engineReason` says why, so the UI never waits on a multi-GB download.
  */
-export async function runLocalPipeline(text, { onStage, onDownloadProgress, signal } = {}) {
+export async function runLocalPipeline(text, { onStage, signal, nanoTimeoutMs = NANO_TIMEOUT_MS } = {}) {
   const stopWatching = watchNetwork()
   const t0 = performance.now()
   const { status } = await getNanoAvailability()
-  let engine = canRunNano(status) ? 'nano' : 'fallback'
+  let engine = status === 'available' ? 'nano' : 'fallback'
+  let engineReason = engine === 'nano' ? null : status
+
+  const nanoStep = (run) => {
+    const stepSignal = AbortSignal.any([AbortSignal.timeout(nanoTimeoutMs), ...(signal ? [signal] : [])])
+    return untilAborted(run(stepSignal), stepSignal)
+  }
+  const fallBack = (err, step) => {
+    if (signal?.aborted) throw err
+    console.warn(`[pipeline] Gemini Nano ${step} failed, using local fallback`, err)
+    return err?.name === 'TimeoutError' ? 'timeout' : 'error'
+  }
 
   onStage?.('redacting')
   let entities = []
   if (engine === 'nano') {
     try {
-      entities = await detectPIIWithNano(text, { onDownloadProgress, signal })
+      entities = await nanoStep((s) => detectPIIWithNano(text, { signal: s }))
     } catch (err) {
-      if (signal?.aborted) throw err
-      console.warn('[pipeline] Gemini Nano redaction failed, using basic filter', err)
+      engineReason = fallBack(err, 'redaction')
       engine = 'fallback'
     }
   }
   const { redactedText, segments, counts, secrets } = redactText(text, entities)
   const redactMs = performance.now() - t0
 
-  onStage?.('extracting', { segments, counts, engine })
+  onStage?.('extracting', { segments, counts, engine, engineReason })
   let extracted = null
   const csvItems = looksLikeCSV(redactedText) ? csvToItems(redactedText) : null
   if (csvItems?.length) {
     extracted = { projectTitle: '', items: csvItems }
   } else if (engine === 'nano') {
     try {
-      extracted = await extractItemsWithNano(redactedText, { signal })
+      extracted = await nanoStep((s) => extractItemsWithNano(redactedText, { signal: s }))
     } catch (err) {
-      if (signal?.aborted) throw err
-      console.warn('[pipeline] Gemini Nano extraction failed, using line parser', err)
+      fallBack(err, 'extraction')
     }
   }
   if (!extracted || buildPayload(extracted).items.length === 0) {
@@ -81,6 +108,7 @@ export async function runLocalPipeline(text, { onStage, onDownloadProgress, sign
 
   return {
     engine,
+    engineReason,
     segments,
     counts,
     payload,

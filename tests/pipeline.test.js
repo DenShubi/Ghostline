@@ -77,3 +77,27 @@ test('CSV input uses column mapping, not the model', async () => {
   assert.ok(!prompts.some((p) => p.system.startsWith('You convert')))
   assert.ok(!JSON.stringify(res).includes('Ana Ruiz'))
 })
+
+test('model still downloading: basic filter runs at once and never waits on create()', async () => {
+  let created = 0
+  globalThis.LanguageModel = {
+    availability: async () => 'downloading',
+    create: async () => { created++; return new Promise(() => {}) },
+  }
+  const res = await runLocalPipeline(IT_CONTRACT)
+  assert.equal(created, 0)
+  assert.equal(res.engine, 'fallback')
+  assert.equal(res.engineReason, 'downloading')
+  assert.equal(res.payload.items.length, 3)
+})
+
+test('a hanging model times out and falls back instead of spinning forever', async () => {
+  globalThis.LanguageModel = {
+    availability: async () => 'available',
+    create: async () => ({ prompt: () => new Promise(() => {}), destroy() {} }),
+  }
+  const res = await runLocalPipeline(IT_CONTRACT, { nanoTimeoutMs: 50 })
+  assert.equal(res.engine, 'fallback')
+  assert.equal(res.engineReason, 'timeout')
+  assert.ok(!JSON.stringify(res.payload).includes('John Miller'))
+})
