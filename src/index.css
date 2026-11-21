@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+
+/* Ghostline tokens. Source of truth: DESIGN.md */
+@theme {
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Major Third (1.25), base 16px */
+  --text-xs: 0.8rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+
+  --color-bg: oklch(0.985 0.003 250);
+  --color-surface: oklch(0.96 0.004 250);
+  --color-fg: oklch(0.22 0.012 250);
+  --color-muted: oklch(0.5 0.012 250);
+  --color-border: oklch(0.9 0.006 250);
+  --color-ink: oklch(0.22 0.012 250);
+  --color-accent: oklch(0.48 0.085 185);
+  --color-accent-fg: oklch(0.985 0.003 250);
+  --color-warning: oklch(0.62 0.14 70);
+  --color-cloud: oklch(0.52 0.11 240);
+
+  --radius-xs: 2px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-bg font-sans text-fg antialiased;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+  border-radius: var(--radius-xs);
+}
