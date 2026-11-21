@@ -42,6 +42,7 @@ raw text ─► PII spans: Gemini Nano (JSON schema) + regex safety net ─► r
 - Nano only **reports** which spans are personal data; the replacement is done in code, so prices can't be altered.
 - The regex net catches emails, phones, IDs and names after cues like "Mr." or "Approved by" even if Nano misses them.
 - The UI shows the observed number of network requests during redaction (PerformanceObserver). It should always be 0.
+- Nano is used only when fully downloaded. While it is missing or still downloading, the basic filter runs at once and the header shows download progress; each Nano step also has a 25 s timeout.
 
 ## Privacy rule
 
@@ -53,15 +54,17 @@ Raw contract text must only reach `src/services/localPipeline.js` and `localNano
 src/
 ├── components/
 │   ├── Navbar.jsx · HybridStatusBadge.jsx   # always-visible local / cloud status
-│   ├── SplitRedactionView.jsx               # original ↔ redacted, CSV upload
+│   ├── StepRail.jsx                         # 1 Paste · 2 Redact | 3 Check prices (device/cloud boundary)
+│   ├── ContractSheet.jsx                    # one sheet: edit → working → redacted copy
 │   ├── RedactedText.jsx                     # ink redaction bars
-│   └── HandoffPreview.jsx                   # what stays here vs. what leaves
+│   └── HandoffPreview.jsx                   # step 3: the only table that crosses to the cloud
+├── hooks/useNanoModel.js                    # Nano status + download progress
 ├── services/
 │   ├── localNanoService.js                  # Prompt API: PII detection, item extraction
 │   ├── localPipeline.js                     # raw text → anonymous payload
 │   ├── firebase.js · benchmarkService.js    # Kahfi
 ├── utils/ redaction · itemExtraction · csvParser · currencyFormatter
-├── data/seedBenchmarks.json
+├── data/ seedBenchmarks.json · sampleContracts.js (1 demo; T12 adds more)
 tests/                                       # npm test
 scripts/seedFirestore.js
 ```

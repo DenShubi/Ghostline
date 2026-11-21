@@ -16,6 +16,7 @@
   --text-3xl: 2.441rem;
 
   --color-bg: oklch(0.985 0.003 250);
+  --color-paper: oklch(0.998 0.001 250);
   --color-surface: oklch(0.96 0.004 250);
   --color-fg: oklch(0.22 0.012 250);
   --color-muted: oklch(0.5 0.012 250);
@@ -25,6 +26,7 @@
   --color-accent-fg: oklch(0.985 0.003 250);
   --color-warning: oklch(0.62 0.14 70);
   --color-cloud: oklch(0.52 0.11 240);
+  --color-error: oklch(0.52 0.17 27);
 
   --radius-xs: 2px;
 
@@ -43,4 +45,35 @@ body {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
   border-radius: var(--radius-xs);
+}
+
+/* The contract sheet shows focus on its own frame instead of an inner ring. */
+textarea:focus-visible {
+  box-shadow: none;
+}
+section:has(> textarea:focus-visible) {
+  border-color: var(--color-fg);
+}
+
+/* Indeterminate progress while the local model works. Motion only if allowed. */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .progress-sweep {
+    animation: sweep 1.1s var(--ease-out) infinite;
+  }
+  [role='img'][aria-label^='Redacted'] {
+    animation: fade-in 200ms var(--ease-out) both;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
