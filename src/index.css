@@ -14,6 +14,7 @@
   --text-xl: 1.5625rem;
   --text-2xl: 1.953rem;
   --text-3xl: 2.441rem;
+  --text-4xl: 3.052rem;
 
   --color-bg: oklch(0.985 0.003 250);
   --color-paper: oklch(0.998 0.001 250);

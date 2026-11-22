@@ -33,7 +33,13 @@ function formatDate(iso) {
  * Editorial Public Audit Brief displaying benchmark comparison, leakage totals,
  * executive findings, and Firestore save/share controls.
  */
-export default function PublicAuditBrief({ report, savedId = null, readOnly = false }) {
+export default function PublicAuditBrief({
+  report,
+  savedId = null,
+  readOnly = false,
+  showFigures = true, // false on the home page, where AuditResults already shows totals and the table
+  canPublish = true, // false when no Firebase project is configured
+}) {
   const [publishedId, setPublishedId] = useState(savedId)
   const [shareUrl, setShareUrl] = useState(savedId ? buildReportShareUrl(savedId) : '')
   const [saving, setSaving] = useState(false)
@@ -88,12 +94,15 @@ export default function PublicAuditBrief({ report, savedId = null, readOnly = fa
         </div>
       </div>
 
-      <p className="mt-3 text-sm text-muted">
+      {showFigures && (
+        <p className="mt-3 text-sm text-muted">
         {report.engine === 'cloud-gemini'
           ? `Benchmarked against Firestore USD market data via Cloud Gemini (${report.modelName}).`
           : 'Benchmarked against Firestore USD market data using deterministic matching (Cloud Gemini unavailable).'}
-      </p>
+        </p>
+      )}
 
+      {showFigures && (
       <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-y border-border py-5 tabular-nums sm:grid-cols-4">
         <div>
           <dt className="text-xs text-muted">Estimated leakage</dt>
@@ -124,12 +133,14 @@ export default function PublicAuditBrief({ report, savedId = null, readOnly = fa
           </dd>
         </div>
       </dl>
+      )}
 
       <div className="mt-8">
         <h3 className="font-display text-lg font-medium">Executive summary</h3>
         <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-fg">{report.executiveSummary}</p>
       </div>
 
+      {showFigures && (
       <div className="mt-10 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="mb-3 text-left font-display text-lg font-medium text-fg">
@@ -196,6 +207,7 @@ export default function PublicAuditBrief({ report, savedId = null, readOnly = fa
           </tbody>
         </table>
       </div>
+      )}
 
       {report.recommendations?.length > 0 && (
         <div className="mt-8">
@@ -208,8 +220,9 @@ export default function PublicAuditBrief({ report, savedId = null, readOnly = fa
         </div>
       )}
 
+      {((canPublish && !readOnly && !publishedId) || shareUrl || saveError) && (
       <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border pt-6">
-        {!readOnly && !publishedId && (
+        {canPublish && !readOnly && !publishedId && (
           <button
             type="button"
             onClick={handlePublish}
@@ -244,6 +257,7 @@ export default function PublicAuditBrief({ report, savedId = null, readOnly = fa
           </p>
         )}
       </div>
+      )}
     </section>
   )
 }

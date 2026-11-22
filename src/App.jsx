@@ -3,10 +3,12 @@ import Navbar from './components/Navbar.jsx'
 import HomePage from './pages/HomePage.jsx'
 import ReportPage from './pages/ReportPage.jsx'
 import { useNanoModel } from './hooks/useNanoModel.js'
+import { isCloudConfigured } from './services/auditHandoff.js'
 
-function badgeMode(status, localBusy, cloudBusy, isSharedReport) {
-  if (localBusy) return 'redacting'
-  if (cloudBusy || isSharedReport) return 'cloud'
+function badgeMode(status, activity, isSharedReport) {
+  if (activity === 'redacting') return 'redacting'
+  if (activity === 'auditing') return isCloudConfigured ? 'cloud' : 'auditing-local'
+  if (isSharedReport) return 'cloud'
   if (status === 'checking') return 'checking'
   if (status === 'available') return 'local'
   if (status === 'downloadable' || status === 'downloading') return 'downloading'
@@ -20,17 +22,16 @@ function getSharedReportId() {
 
 export default function App() {
   const nano = useNanoModel()
-  const [busy, setBusy] = useState(false)
-  const [cloudBusy, setCloudBusy] = useState(false)
+  const [activity, setActivity] = useState(null)
   const sharedReportId = getSharedReportId()
 
   return (
     <div className="min-h-dvh">
-      <Navbar mode={badgeMode(nano.status, busy, cloudBusy, Boolean(sharedReportId))} progress={nano.progress} />
+      <Navbar mode={badgeMode(nano.status, activity, Boolean(sharedReportId))} progress={nano.progress} />
       {sharedReportId ? (
         <ReportPage reportId={sharedReportId} />
       ) : (
-        <HomePage nano={nano} onBusyChange={setBusy} onCloudBusyChange={setCloudBusy} />
+        <HomePage nano={nano} onActivityChange={setActivity} />
       )}
     </div>
   )

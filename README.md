@@ -44,6 +44,14 @@ raw text ─► PII spans: Gemini Nano (JSON schema) + regex safety net ─► r
 - The UI shows the observed number of network requests during redaction (PerformanceObserver). It should always be 0.
 - Nano is used only when fully downloaded. While it is missing or still downloading, the basic filter runs at once and the header shows download progress; each Nano step also has a 25 s timeout.
 
+## Price check (Phase 3)
+
+`runPriceAudit(result.payload)` in `src/services/auditHandoff.js` is the only way line items leave the local pipeline.
+
+- **Firebase env vars set** (`VITE_FIREBASE_*` from `.env.example`, also in Vercel → Settings → Environment Variables): Cloud Gemini matches items against Firestore `price_benchmarks`. If Firestore is empty or unreachable it uses the bundled `seedBenchmarks.json`; if Gemini fails it matches by name.
+- **No env vars** (e.g. a preview deploy): the check runs on the device against the bundled 40 benchmarks and the UI says so. No request is made.
+- Markups, risk levels and the overpayment total are always computed in code (`utils/pricingAudit.js`), never by the model.
+
 ## Privacy rule
 
 Raw contract text must only reach `src/services/localPipeline.js` and `localNanoService.js`. Only `result.payload` may be handed to the cloud. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`, because that silently falls back to the cloud with PII.
@@ -57,11 +65,15 @@ src/
 │   ├── StepRail.jsx                         # 1 Paste · 2 Redact | 3 Check prices (device/cloud boundary)
 │   ├── ContractSheet.jsx                    # one sheet: edit → working → redacted copy
 │   ├── RedactedText.jsx                     # ink redaction bars
-│   └── HandoffPreview.jsx                   # step 3: the only table that crosses to the cloud
+│   ├── HandoffPreview.jsx                   # step 3: the only table that crosses to the cloud
+│   ├── AuditResults.jsx                     # price check: LeakageCounterCard + MarkupAlertTable
+│   └── RiskTag.jsx                          # Critical / Moderate / Normal / No benchmark
 ├── hooks/useNanoModel.js                    # Nano status + download progress
 ├── services/
 │   ├── localNanoService.js                  # Prompt API: PII detection, item extraction
 │   ├── localPipeline.js                     # raw text → anonymous payload
+│   ├── auditHandoff.js                      # payload → price audit (cloud, or on-device without Firebase env)
+│   ├── cloudAuditService.js                 # Kahfi: Cloud Gemini + benchmark matching
 │   ├── firebase.js · benchmarkService.js    # Kahfi
 ├── utils/ redaction · itemExtraction · csvParser · currencyFormatter
 ├── data/ seedBenchmarks.json · sampleContracts.js (1 demo; T12 adds more)
@@ -80,4 +92,7 @@ scripts/seedFirestore.js
 | T05 | Split-screen redaction UI & CSV/text input | Denin | ✅ Done |
 | T06 | Gemini Nano PII redaction & JSON extraction | Denin | 🟡 Done; tested with mocked Nano + fallback, needs a run on real Nano |
 | T07 | Local vs. cloud & "0 PII sent" indicators | Denin | ✅ Done |
-| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ⬜ |
+| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ✅ Merged (PR #2) |
+| T09 | Sanitized JSON handoff to Cloud Gemini + Firestore | Both | ✅ Done; live cloud path needs Firebase env vars |
+| T10 | Markup alert table & total leakage counter | Denin | ✅ Done |
+| T11 | Public Audit Brief view & Firestore save/share | Kahfi | ⬜ |

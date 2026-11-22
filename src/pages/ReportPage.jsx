@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import PublicAuditBrief from '../components/PublicAuditBrief.jsx'
 import { getAuditReportById } from '../services/auditReportService.js'
+import { isCloudConfigured } from '../services/auditHandoff.js'
 
 /**
  * Standalone view for shared Public Audit Brief links (`/?report=<id>`).
  */
 export default function ReportPage({ reportId }) {
-  const [status, setStatus] = useState('loading') // loading | ready | missing | error
+  // Without a Firebase project the Firestore read never settles, so don't start it.
+  const [status, setStatus] = useState(isCloudConfigured ? 'loading' : 'offline') // loading | ready | missing | error | offline
   const [report, setReport] = useState(null)
 
   useEffect(() => {
+    if (!isCloudConfigured) return
     let active = true
     async function load() {
       try {
@@ -52,6 +55,15 @@ export default function ReportPage({ reportId }) {
           <h1 className="font-display text-2xl font-medium">Audit brief not found</h1>
           <p className="mt-2 max-w-[58ch] text-sm text-muted">
             No published audit brief exists for ID <code className="font-mono text-fg">{reportId}</code>.
+          </p>
+        </div>
+      )}
+
+      {status === 'offline' && (
+        <div className="mt-10">
+          <h1 className="font-display text-2xl font-medium">Shared briefs aren’t available here</h1>
+          <p className="mt-2 max-w-[58ch] text-sm text-muted">
+            This site isn’t connected to the cloud yet, so published audit briefs can’t be loaded.
           </p>
         </div>
       )}
