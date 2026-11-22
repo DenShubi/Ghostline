@@ -31,7 +31,8 @@
 
 | step | size | line-height | use |
 |------|------|-------------|-----|
-| 3xl | 39px | 1.25 | page headline (desktop) |
+| 4xl | 49px | 1 | overpayment total (desktop) |
+| 3xl | 39px | 1.25 | page headline (desktop), overpayment total (mobile) |
 | 2xl | 31px | 1.25 | page headline (mobile), section |
 | xl | 25px | 1.3 | sub-section |
 | lg | 20px | 1.6 | lead paragraph, wordmark |
@@ -55,7 +56,7 @@
   - accent-fg: oklch(0.985 0.003 250) | #f7f8fa
   - warning (fallback): oklch(0.62 0.14 70) | #b8741a
   - cloud: oklch(0.52 0.11 240) | #2f6aa3
-  - error: oklch(0.52 0.17 27) | #b3362c
+  - error (also critical risk, overpayment): oklch(0.52 0.17 27) | #b3362c
 
 ## Spacing, radius, shadow
 
@@ -80,6 +81,10 @@
 - Contract sheet: `paper` fill, 1px border, 48px toolbar (title left; "Try an example" · "Upload CSV" while editing, "N details hidden" · "Edit original" once redacted). Focus shows as the frame turning fg, not an inner ring. Working state: dimmed text + 2px accent sweep bar under the toolbar.
 - Redacted text: monospace, PII replaced by ink bars sized to the hidden text in `ch` (capped at 32ch), `role="img"` with the PII type as label.
 - Step 3 (handoff): serif heading "Ready to check prices", one sentence saying only the table crosses and how many network requests redaction made, then a ruled table (text left, numbers right, `tabular-nums`), then the primary "Check prices in the cloud" (disabled until Phase 3 wires it).
+- Price check (T10): serif heading "Price check", one sentence saying where prices were checked (cloud vs this device, Firestore vs built-in list), then the overpayment number and the alert table. No cards.
+- Leakage counter: label "Estimated overpayment", the total in Newsreader at 4xl (3xl on mobile), `error` colour when above 0, one 700ms ease-out count-up (none with reduced motion; screen readers get the final value). One sentence underneath: share of contract value and counts by risk. Deliberately not a metric triptych.
+- Markup alert table: worst first (critical, moderate, normal, no benchmark, then by overpaid). Item cell holds name, RiskTag, quantity and the reason; Paid / Fair per unit hide below `sm` (the unit price moves under the name); Markup and Overpaid are always visible, right-aligned, `tabular-nums`.
+- RiskTag: 8px square + word. Critical = `error`, Moderate = `warning`, Normal = muted, No benchmark = outlined square. Only anomalies get colour.
 - Fallback notice: warning square + one sentence with the reason (no Nano / still downloading with % / timeout / error), plus Chrome-flag steps in a `<details>` only when the browser can't run Nano.
 - Empty / loading / error: the empty sheet offers an example and says what will happen; loading is the button label, status line and sweep bar; errors say that nothing was sent.
 - Focus ring: 2px bg gap + 2px accent box-shadow.
@@ -120,6 +125,8 @@ Implemented as Tailwind v4 `@theme` in `src/index.css`.
 - Phase 2 (2026-11-21): pass after fixing 1 issue. Line-item table scrolled sideways on mobile and hid qty and price; Specs column now hides below `sm`.
 
 ## Changelog
+
+- 2026-11-22: Phase 3 price check. Leakage counter, markup alert table, RiskTag, cloud/on-device audit status in the header. Added text-4xl. Audit: pass; fixed misleading "crosses to the cloud" copy when no cloud is configured.
 
 - 2026-11-21: guided 3-step redesign after user feedback ("I don't get the view"). Step rail with device/cloud boundary, single contract sheet, example contract, step 3 handoff. Split view removed. Tokens added: paper, error.
 
