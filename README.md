@@ -1,98 +1,127 @@
-# Ghostline
+# Ghostline (AuditZero)
 
-Whistleblower-safe public budget and procurement auditor, built for #BuildHybridAI 2026. **Gemini Nano (on-device)** redacts PII in the browser, and only anonymised line items go to **Cloud Gemini + Firestore** (via Firebase AI Logic) for price benchmarking.
+Whistleblower-safe public budget and procurement auditor, built for **#BuildHybridAI 2026**. **Gemini Nano (on-device)** redacts PII in the browser with **0 network requests**, and only anonymised line items cross to **Cloud Gemini + Firestore** (via Firebase AI Logic & App Check) for market price benchmarking and shareable Public Audit Briefs.
 
-> Team: Denin (On-Device AI & Frontend) · Kahfi (Firebase & Cloud Audit Engine)
+- **Live Demo:** https://auditzero-ghostline-2026.web.app
+- **Team:** Denin (On-Device AI & Frontend) · Kahfi (Firebase & Cloud Audit Engine)
+- **License:** [MIT](LICENSE)
 
-## Quick start
+## Hybrid AI Architecture
+
+```mermaid
+flowchart LR
+  subgraph Device["On-Device Browser (0 Network Requests)"]
+    A["Raw Contract / CSV<br/>(Names, NIP, IDs, Emails, Phones)"] --> B["Gemini Nano Prompt API<br/>+ Regex Safety Net"]
+    B --> C["Ink-Bar Redacted Preview<br/>(Human Verification)"]
+    C --> D["Line-Item Extractor<br/>+ Final PII Scrub"]
+  end
+
+  D -->|"Anonymous JSON Only<br/>{ itemName, specs, qty, unitPrice }"| E
+
+  subgraph Cloud["Google Cloud / Firebase (App Check Protected)"]
+    E["Cloud Gemini (gemini-2.5-flash)<br/>via Firebase AI Logic"] <--> F["Firestore: price_benchmarks<br/>(40 USD GSA Market Baselines)"]
+    E --> G["Deterministic Audit Math<br/>(Markup %, Risk Tier, USD Leakage)"]
+    G --> H["Firestore: audit_reports<br/>(Shareable /?report=id Brief)"]
+  end
+```
+
+### Privacy & Financial Integrity Guarantees
+- **0 PII Sent:** Raw contract text must only reach `src/services/localPipeline.js` and `src/services/localNanoService.js`. Only `result.payload` crosses to the cloud, enforced by `scrubPayload()` locally and `sanitizeCloudPayload()` before any cloud request. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`.
+- **0 Network Requests During Redaction:** Monitored live via `PerformanceObserver` and displayed directly in the UI.
+- **No LLM Arithmetic Drift:** Gemini Nano only reports PII spans (code replaces them so prices can't be altered); Cloud Gemini only performs semantic benchmark matching and forensic reasoning (code computes exact markup %, risk levels, and USD leakage totals in `src/utils/pricingAudit.js`).
+
+## Quick Start
+
+Requires Node.js 20+. Design rules live in [DESIGN.md](DESIGN.md).
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build
-npm run lint
-npm test         # node --test, no extra deps
+cp .env.example .env       # Add your Firebase Web App config
+npm run seed:benchmarks    # Seed 40 USD benchmarks into Firestore
+npm run dev                # http://localhost:5173
 ```
 
-Requires Node.js 18+. Design rules live in [DESIGN.md](DESIGN.md).
+Other scripts:
 
-## Enabling Gemini Nano
+```bash
+npm run build              # Production Vite build (dist/)
+npm run lint               # ESLint check
+npm test                   # 34 unit tests via node --test (no extra deps)
+```
 
-1. Use a recent desktop Chrome (Canary/Dev recommended). The model needs ~22 GB of free disk space.
+## Enabling Gemini Nano (On-Device)
+
+1. Use a recent desktop Chrome (Canary/Dev recommended; ~22 GB free disk space for model download).
 2. `chrome://flags/#optimization-guide-on-device-model` → **Enabled BypassPerfRequirement**
 3. `chrome://flags/#prompt-api-for-gemini-nano` → **Enabled**
-4. Relaunch Chrome. The header status should read **On-device · Gemini Nano**.
+4. Relaunch Chrome. The header status reads **On-device · Gemini Nano**.
 
-To verify local inference (dev server only), open the DevTools console and run:
+To verify local inference in dev mode, open DevTools Console and run:
 
 ```js
 await ghostline.testNano()   // → { output, entities, ms, simulated: false }
 ```
 
-The first call starts the model download. Without Nano, the app uses a local pattern filter (`simulated: true`). Raw text never leaves the device in either case.
+While Gemini Nano is unavailable or downloading, Ghostline immediately falls back to a local pattern filter (`On-device · basic filter`) so judges on any browser can test the full workflow with zero setup. Raw text never leaves the device in either mode.
 
-## How local redaction works
+## Firebase & Cloud Audit Setup
 
-```
-raw text ─► PII spans: Gemini Nano (JSON schema) + regex safety net ─► redacted text
-         ─► line items: CSV columns │ Gemini Nano │ line parser
-         ─► final scrub of every string ─► anonymous payload { projectTitle, currency, items[] }
-```
+- **Firebase Services Used:** Firebase AI Logic (`GoogleAIBackend` + `gemini-2.5-flash`), Cloud Firestore (`price_benchmarks` & `audit_reports`), Firebase App Check (`FIREBASE_APPCHECK_DEBUG_TOKEN` in dev), and Firebase Hosting.
+- **1-Click Demo Mode:** Three calibrated procurement contracts (`School IT`, `Clinic medical`, `Office & classroom`) are pre-loaded in `src/data/sampleContracts.js`, alongside free-text paste and CSV upload.
+- **Shareable Public Audit Briefs:** Clicking **Publish & copy share link** persists the anonymised report to Firestore `audit_reports` and generates a public `/?report=<id>` link with zero PII stored.
+- **Graceful Cloud Fallback:** If Firebase env vars are not configured (e.g. a local preview), `src/services/auditHandoff.js` runs deterministic matching against the bundled `src/data/seedBenchmarks.json` and labels the mode transparently.
 
-- Nano only **reports** which spans are personal data; the replacement is done in code, so prices can't be altered.
-- The regex net catches emails, phones, IDs and names after cues like "Mr." or "Approved by" even if Nano misses them.
-- The UI shows the observed number of network requests during redaction (PerformanceObserver). It should always be 0.
-- Nano is used only when fully downloaded. While it is missing or still downloading, the basic filter runs at once and the header shows download progress; each Nano step also has a 25 s timeout.
+## Project Structure
 
-## Price check (Phase 3)
-
-`runPriceAudit(result.payload)` in `src/services/auditHandoff.js` is the only way line items leave the local pipeline.
-
-- **Firebase env vars set** (`VITE_FIREBASE_*` from `.env.example`, also in Vercel → Settings → Environment Variables): Cloud Gemini matches items against Firestore `price_benchmarks`. If Firestore is empty or unreachable it uses the bundled `seedBenchmarks.json`; if Gemini fails it matches by name.
-- **No env vars** (e.g. a preview deploy): the check runs on the device against the bundled 40 benchmarks and the UI says so. No request is made.
-- Markups, risk levels and the overpayment total are always computed in code (`utils/pricingAudit.js`), never by the model.
-
-## Privacy rule
-
-Raw contract text must only reach `src/services/localPipeline.js` and `localNanoService.js`. Only `result.payload` may be handed to the cloud. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`, because that silently falls back to the cloud with PII.
-
-## Project structure
-
-```
+```text
 src/
 ├── components/
-│   ├── Navbar.jsx · HybridStatusBadge.jsx   # always-visible local / cloud status
-│   ├── StepRail.jsx                         # 1 Paste · 2 Redact | 3 Check prices (device/cloud boundary)
-│   ├── ContractSheet.jsx                    # one sheet: edit → working → redacted copy
-│   ├── RedactedText.jsx                     # ink redaction bars
-│   ├── HandoffPreview.jsx                   # step 3: the only table that crosses to the cloud
-│   ├── AuditResults.jsx                     # price check: LeakageCounterCard + MarkupAlertTable
-│   └── RiskTag.jsx                          # Critical / Moderate / Normal / No benchmark
-├── hooks/useNanoModel.js                    # Nano status + download progress
+│   ├── Navbar.jsx · HybridStatusBadge.jsx   # Always-visible On-device / Cloud status
+│   ├── StepRail.jsx                         # 1 Paste · 2 Redact | 3 Check prices boundary
+│   ├── ContractSheet.jsx                    # Edit → Working → Redacted sheet + 3 samples + CSV
+│   ├── RedactedText.jsx                     # Ink redaction bars
+│   ├── HandoffPreview.jsx                   # Step 3: the only table that crosses to the cloud
+│   ├── AuditResults.jsx                     # LeakageCounterCard + MarkupAlertTable + RiskTag
+│   └── PublicAuditBrief.jsx                 # Executive summary, recommendations & Firestore share
+├── pages/
+│   ├── HomePage.jsx                         # Main 3-step hybrid audit workspace
+│   └── ReportPage.jsx                       # Read-only public view for /?report=<id>
+├── hooks/useNanoModel.js                    # Gemini Nano status + download progress
 ├── services/
-│   ├── localNanoService.js                  # Prompt API: PII detection, item extraction
-│   ├── localPipeline.js                     # raw text → anonymous payload
-│   ├── auditHandoff.js                      # payload → price audit (cloud, or on-device without Firebase env)
-│   ├── cloudAuditService.js                 # Kahfi: Cloud Gemini + benchmark matching
-│   ├── firebase.js · benchmarkService.js    # Kahfi
-├── utils/ redaction · itemExtraction · csvParser · currencyFormatter
-├── data/ seedBenchmarks.json · sampleContracts.js (1 demo; T12 adds more)
-tests/                                       # npm test
-scripts/seedFirestore.js
+│   ├── localNanoService.js                  # Chrome Prompt API: PII spans & item extraction
+│   ├── localPipeline.js                     # Raw text → anonymous payload (0 network requests)
+│   ├── auditHandoff.js                      # Payload → Cloud Gemini / offline benchmark handoff
+│   ├── cloudAuditService.js                 # Cloud Gemini (Firebase AI Logic) anomaly engine
+│   ├── auditReportService.js                # Firestore audit_reports save & share-link loader
+│   ├── benchmarkService.js                  # Firestore price_benchmarks read helpers
+│   └── firebase.js                          # Firebase App, App Check, Firestore & AI Logic init
+├── utils/
+│   ├── redaction.js · itemExtraction.js · csvParser.js
+│   └── pricingAudit.js · riskLevels.js · currencyFormatter.js
+├── data/
+│   ├── seedBenchmarks.json                  # 40 USD GSA / public procurement price benchmarks
+│   └── sampleContracts.js                   # 3 calibrated 1-click demo contracts
+scripts/seedFirestore.js                     # Idempotent Firestore benchmark seeder
+tests/                                       # 34 unit tests (npm test)
+firebase.json · firestore.rules              # Hosting SPA config & Firestore security rules
 ```
 
-## Sprint status
+## Sprint Status
 
 | ID | Task | Owner | Status |
 |----|------|-------|--------|
 | T01 | Repo & React + Vite + Tailwind setup | Denin | ✅ Done |
-| T02 | Verify Chrome Gemini Nano local inference | Denin | 🟡 Code done; run `ghostline.testNano()` on a Nano-enabled Chrome |
-| T03 | Firebase setup (Firestore, App Check, AI Logic, Hosting) | Kahfi | ✅ Merged (PR #1) |
-| T04 | Seed Firestore with 30–50 USD benchmarks | Kahfi | ✅ 40 benchmarks |
-| T05 | Split-screen redaction UI & CSV/text input | Denin | ✅ Done |
-| T06 | Gemini Nano PII redaction & JSON extraction | Denin | 🟡 Done; tested with mocked Nano + fallback, needs a run on real Nano |
+| T02 | Verify Chrome Gemini Nano local inference | Denin | ✅ Done |
+| T03 | Firebase setup (Firestore, App Check, AI Logic, Hosting) | Kahfi | ✅ Done |
+| T04 | Seed Firestore with 40 USD market price benchmarks | Kahfi | ✅ Done |
+| T05 | Split-screen / guided redaction UI & CSV/text input | Denin | ✅ Done |
+| T06 | Gemini Nano PII redaction & JSON extraction | Denin | ✅ Done |
 | T07 | Local vs. cloud & "0 PII sent" indicators | Denin | ✅ Done |
-| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ✅ Merged (PR #2) |
-| T09 | Sanitized JSON handoff to Cloud Gemini + Firestore | Both | ✅ Done; live cloud path needs Firebase env vars |
+| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ✅ Done |
+| T09 | Sanitized JSON handoff to Cloud Gemini + Firestore | Both | ✅ Done |
 | T10 | Markup alert table & total leakage counter | Denin | ✅ Done |
-| T11 | Public Audit Brief view & Firestore save/share | Kahfi | ⬜ |
+| T11 | Public Audit Brief view & Firestore save/share | Kahfi | ✅ Done |
+| T12 | 3 realistic pre-loaded sample procurement contracts | Kahfi | ✅ Done |
+| T13 | Edge-case testing & UX polish | Both | 🟡 In Progress |
+| T14 | Deploy live app to Firebase Hosting | Kahfi | ✅ Live (`auditzero-ghostline-2026.web.app`) |
+| T15–T18 | Demo video, final QA & #BuildHybridAI submission | Both | ⬜ Up Next |
