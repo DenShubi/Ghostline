@@ -8,7 +8,17 @@ const textButton =
  * One document that changes state: editable contract → working → redacted copy.
  * @param {{ mode: 'edit'|'busy'|'redacted' }} props
  */
-export default function ContractSheet({ mode, text, onTextChange, onExample, onFile, onEdit, segments, hidden }) {
+export default function ContractSheet({
+  mode,
+  text,
+  onTextChange,
+  examples = [],
+  onExample,
+  onFile,
+  onEdit,
+  segments,
+  hidden,
+}) {
   const fileInput = useRef(null)
   const body = 'min-h-80 w-full px-4 py-4 font-mono text-sm leading-relaxed sm:px-6 sm:py-5'
 
@@ -29,10 +39,27 @@ export default function ContractSheet({ mode, text, onTextChange, onExample, onF
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-5">
-            <button type="button" onClick={onExample} disabled={mode === 'busy'} className={textButton}>
-              Try an example
-            </button>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {examples.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-xs text-muted">Samples:</span>
+                {examples.map((sample) => (
+                  <button
+                    key={sample.id}
+                    type="button"
+                    onClick={() => onExample(sample)}
+                    disabled={mode === 'busy'}
+                    className={textButton}
+                  >
+                    {sample.shortLabel || sample.title}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button type="button" onClick={() => onExample()} disabled={mode === 'busy'} className={textButton}>
+                Try an example
+              </button>
+            )}
             <button
               type="button"
               onClick={() => fileInput.current?.click()}

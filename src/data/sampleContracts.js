@@ -1,12 +1,14 @@
 /**
- * Fictional demo contract. Every person, ID and contact below is invented.
- * Prices are set against src/data/seedBenchmarks.json: laptop ~+130% and
- * monitor ~+45% over the fair average, the rest within the fair range.
- * Kahfi's T12 adds the full set of three samples.
+ * Fictional demo procurement contracts for 1-click demo mode (T12).
+ * Every person, employee ID, email, and phone number below is invented.
+ * Prices are calibrated against src/data/seedBenchmarks.json so each sample
+ * demonstrates critical (+60%+) and elevated (+25%–59%) markups alongside
+ * fair-market baseline items.
  */
 export const SAMPLE_CONTRACTS = [
   {
     id: 'it-infrastructure',
+    shortLabel: 'School IT',
     title: 'Public school IT procurement',
     text: `Public School IT Infrastructure Procurement
 Contract No. PO-2026-001234 · District Education Office
@@ -24,5 +26,47 @@ Line items
 
 Total contract value: $648,020.00
 Delivery questions go to Ms. Ellison before 15 December 2026.`,
+  },
+  {
+    id: 'medical-emergency',
+    shortLabel: 'Clinic medical',
+    title: 'Regional clinic medical supply tender',
+    text: `Regional Clinic Medical Supply Tender
+Contract No. PO-2026-004891 · Metropolitan Health Department
+
+Prepared by: Dr. Elena Vance (Employee ID: EMP-77412)
+Authorized by: Mr. David Chen, NIP 197911042008
+Internal contact: e.vance@metrohealth-dept.gov / +1 (555) 019-8821
+
+Line items
+1. Infrared Thermometer (non-contact, medical grade) - Qty: 400 - Unit price: $77.00
+2. Surgical Masks (Box of 50) - Qty: 2000 - Unit price: $24.00
+3. Multi-Parameter Patient Monitor (12-inch ICU display) - Qty: 15 - Unit price: $2,400.00
+4. Digital Upper-Arm Blood Pressure Monitor (clinical cuff) - Qty: 80 - Unit price: $68.00
+5. Nitrile Examination Gloves (Box of 100) - Qty: 600 - Unit price: $15.00
+
+Total contract value: $129,240.00
+Cold-chain verification handled by Dr. Vance before 20 December 2026.`,
+  },
+  {
+    id: 'office-classroom',
+    shortLabel: 'Office & classroom',
+    title: 'Municipal office & classroom upgrade',
+    text: `Municipal Office & Classroom Modernization
+Contract No. PO-2026-007310 · Civic Operations Bureau
+
+Issued by: Ms. Priya Patel (Employee ID: EMP-31904)
+Signed by: Mr. Samuel Brooks, NIP 198506212012
+Internal contact: p.patel@civic-ops.gov / +1 (555) 014-6630
+
+Line items
+1. Ergonomic Office Chair (lumbar mesh, adjustable arms) - Qty: 150 - Unit price: $522.00
+2. 65-inch Smart Interactive Board (4K touch display) - Qty: 18 - Unit price: $2,960.00
+3. Student Desk & Chair Set (steel frame) - Qty: 250 - Unit price: $145.00
+4. Electric Height-Adjustable Standing Desk (dual motor) - Qty: 30 - Unit price: $460.00
+5. A4 Copy Paper (Case of 5 Reams) - Qty: 200 - Unit price: $36.00
+
+Total contract value: $188,830.00
+Site installation coordinated with Ms. Patel before 28 December 2026.`,
   },
 ]
