@@ -4,7 +4,7 @@
 
 Ghostline checks a public procurement contract for overpricing without exposing the people in it. Names, ID numbers, emails and phone numbers are blacked out on your own device. Only the anonymous line items (item, quantity, unit price) are sent to the cloud, where they are compared with fair market prices.
 
-**Try it:** https://auditzero-ghostline-2026.web.app
+**Try it:** https://auditzero-ghostline-2026.web.app · **License:** [MIT](LICENSE)
 
 Built for journalists, watchdogs and whistleblowers who want a second opinion on a leaked contract without putting a source at risk.
 
@@ -15,6 +15,23 @@ Built for journalists, watchdogs and whistleblowers who want a second opinion on
 3. **Check prices, in the cloud.** Only the line-item table goes to Cloud Gemini (via Firebase AI Logic), which matches each item to a USD market benchmark stored in Firestore. Ghostline then shows the estimated overpayment and every item compared with its fair price.
 
 The header always tells you where work is happening: **On-device** while redacting, **Cloud Gemini** while checking prices.
+
+```mermaid
+flowchart LR
+  subgraph Device["Your device (0 network requests)"]
+    A["Contract text or CSV<br/>(names, IDs, emails, phones)"] --> B["Gemini Nano<br/>+ built-in filter"]
+    B --> C["Redacted copy<br/>(you check it)"]
+    C --> D["Line items<br/>+ final privacy check"]
+  end
+
+  D -->|"Anonymous line items only<br/>item, specs, qty, unit price"| E
+
+  subgraph Cloud["Firebase (App Check protected)"]
+    E["Cloud Gemini<br/>via Firebase AI Logic"] <--> F["Firestore<br/>40 USD market benchmarks"]
+    E --> G["Markup, risk and overpayment<br/>calculated in code"]
+    G --> H["Optional published brief<br/>(share link)"]
+  end
+```
 
 ## Reading the results
 
@@ -56,7 +73,7 @@ Chrome downloads the model once (a few GB) and needs about 22 GB of free disk sp
 
 ## Run it yourself
 
-Requires Node.js 18+ and a Firebase project with Firestore and Firebase AI Logic (Gemini Developer API) enabled.
+Requires Node.js 20+ and a Firebase project with Firestore and Firebase AI Logic (Gemini Developer API) enabled.
 
 ```bash
 npm install
