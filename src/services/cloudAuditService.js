@@ -24,7 +24,7 @@ export const DEFAULT_AUDIT_MODEL = env.VITE_GEMINI_MODEL || 'gemini-2.5-flash'
 const DEFAULT_TIMEOUT_MS = 30_000
 
 const AUDIT_SYSTEM_INSTRUCTION = [
-  'You are a forensic public procurement auditor for AuditZero (Ghostline).',
+  'You are a forensic public procurement auditor for Ghostline.',
   'You receive ONLY anonymised line items (zero personal data) and a catalog of verified USD public market price benchmarks.',
   'For each input line item (by its 0-based `index`):',
   '1. Match it to the closest benchmark in the provided catalog and return its exact `benchmarkId`, or null if no benchmark in the catalog fits.',

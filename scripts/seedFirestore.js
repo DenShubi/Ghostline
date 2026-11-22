@@ -1,5 +1,5 @@
 /**
- * Standalone Firestore seeding script for AuditZero USD market price benchmarks.
+ * Standalone Firestore seeding script for Ghostline USD market price benchmarks.
  *
  * Usage:
  *   npm run seed:benchmarks

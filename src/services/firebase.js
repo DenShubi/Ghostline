@@ -1,5 +1,5 @@
 /**
- * Core Firebase initialization for AuditZero / Ghostline.
+ * Core Firebase initialization for Ghostline.
  *
  * Exports the initialized Firebase App, Firestore database (`db`),
  * Firebase AI Logic client (`ai`), and App Check instance (`appCheck`).
