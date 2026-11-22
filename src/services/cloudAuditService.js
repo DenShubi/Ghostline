@@ -10,6 +10,7 @@
  */
 
 import { cleanJSON } from '../utils/itemExtraction.js'
+import { withRetry } from '../utils/retry.js'
 import {
   buildFallbackBrief,
   evaluateLineItem,
@@ -20,11 +21,13 @@ import {
 
 const env = import.meta.env ?? {}
 
-export const DEFAULT_AUDIT_MODEL = env.VITE_GEMINI_MODEL || 'gemini-2.5-flash'
-const DEFAULT_TIMEOUT_MS = 30_000
+// gemini-2.5-flash is closed to new projects (404 from Firebase AI Logic).
+export const DEFAULT_AUDIT_MODEL = env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
+// Room for one retry after a transient "high demand" error.
+const DEFAULT_TIMEOUT_MS = 45_000
 
 const AUDIT_SYSTEM_INSTRUCTION = [
-  'You are a forensic public procurement auditor for AuditZero (Ghostline).',
+  'You are a forensic public procurement auditor for Ghostline.',
   'You receive ONLY anonymised line items (zero personal data) and a catalog of verified USD public market price benchmarks.',
   'For each input line item (by its 0-based `index`):',
   '1. Match it to the closest benchmark in the provided catalog and return its exact `benchmarkId`, or null if no benchmark in the catalog fits.',
@@ -102,7 +105,7 @@ export function buildAuditPrompt(cleanPayload, benchmarks) {
  * Default Cloud Gemini invoker using Firebase AI Logic (`src/services/firebase.js`).
  */
 async function defaultGenerateAudit(prompt, { modelName = DEFAULT_AUDIT_MODEL, signal } = {}) {
-  const [{ getGenerativeModel }, { ai }] = await Promise.all([
+  const [{ getGenerativeModel, ThinkingLevel }, { ai }] = await Promise.all([
     import('firebase/ai'),
     import('./firebase.js'),
   ])
@@ -114,10 +117,14 @@ async function defaultGenerateAudit(prompt, { modelName = DEFAULT_AUDIT_MODEL, s
       temperature: 0.1,
       responseMimeType: 'application/json',
       responseJsonSchema: AUDIT_RESPONSE_JSON_SCHEMA,
+      // Matching items to a benchmark catalog needs little reasoning, so keep
+      // latency down. (MINIMAL is rejected by gemini-3.8-flash with a 400.)
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
     },
   })
 
-  const result = await model.generateContent(prompt, signal ? { signal } : undefined)
+  // Retry once on 429/5xx ("model is experiencing high demand").
+  const result = await withRetry(() => model.generateContent(prompt, signal ? { signal } : undefined), { signal })
   return result.response.text()
 }
 
