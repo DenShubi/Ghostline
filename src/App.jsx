@@ -2,9 +2,11 @@ import { useState } from 'react'
 import Navbar from './components/Navbar.jsx'
 import HomePage from './pages/HomePage.jsx'
 import { useNanoModel } from './hooks/useNanoModel.js'
+import { isCloudConfigured } from './services/auditHandoff.js'
 
-function badgeMode(status, busy) {
-  if (busy) return 'redacting'
+function badgeMode(status, activity) {
+  if (activity === 'redacting') return 'redacting'
+  if (activity === 'auditing') return isCloudConfigured ? 'cloud' : 'auditing-local'
   if (status === 'checking') return 'checking'
   if (status === 'available') return 'local'
   if (status === 'downloadable' || status === 'downloading') return 'downloading'
@@ -13,12 +15,12 @@ function badgeMode(status, busy) {
 
 export default function App() {
   const nano = useNanoModel()
-  const [busy, setBusy] = useState(false)
+  const [activity, setActivity] = useState(null)
 
   return (
     <div className="min-h-dvh">
-      <Navbar mode={badgeMode(nano.status, busy)} progress={nano.progress} />
-      <HomePage nano={nano} onBusyChange={setBusy} />
+      <Navbar mode={badgeMode(nano.status, activity)} progress={nano.progress} />
+      <HomePage nano={nano} onActivityChange={setActivity} />
     </div>
   )
 }

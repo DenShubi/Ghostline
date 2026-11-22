@@ -4,7 +4,8 @@ const MODES = {
   downloading: { label: 'Gemini Nano downloading', marker: 'bg-warning' },
   fallback: { label: 'On-device · basic filter', marker: 'bg-warning' },
   redacting: { label: 'Redacting on this device · 0 sent', marker: 'bg-accent', active: true },
-  cloud: { label: 'Cloud · Gemini', marker: 'bg-cloud', active: true },
+  cloud: { label: 'Cloud Gemini · benchmarking via Firestore', marker: 'bg-cloud', active: true },
+  'auditing-local': { label: 'Checking prices on this device', marker: 'bg-accent', active: true },
 }
 
 /** Where AI work runs right now. Always visible. */

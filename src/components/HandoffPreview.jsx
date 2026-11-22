@@ -3,7 +3,7 @@ import { formatCount, formatUSD } from '../utils/currencyFormatter.js'
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 /** Step 3: exactly what would cross to the cloud, and nothing else. */
-export default function HandoffPreview({ result }) {
+export default function HandoffPreview({ result, onAudit, auditing, auditError, cloudConfigured }) {
   const { payload, counts, networkRequests } = result
   const kept = Object.values(counts).reduce((a, b) => a + b, 0)
   const hasItems = payload.items.length > 0
@@ -15,7 +15,7 @@ export default function HandoffPreview({ result }) {
       </h2>
       <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-muted">
         {hasItems
-          ? `Only this table crosses to the cloud. The contract text and ${plural(kept, 'personal detail')} stay on this device, and redaction made ${plural(networkRequests, 'network request')}.`
+          ? `${cloudConfigured ? 'Only this table crosses to the cloud.' : 'Only this table is used for the price check.'} The contract text and ${plural(kept, 'personal detail')} stay on this device, and redaction made ${plural(networkRequests, 'network request')}.`
           : 'Each item needs a name, a quantity and a unit price in USD, for example “Laptop - Qty: 500 - Unit price: $1,210.00”.'}
       </p>
 
@@ -57,12 +57,16 @@ export default function HandoffPreview({ result }) {
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
             <button
               type="button"
-              disabled
-              className="min-h-11 rounded-xs bg-ink px-5 text-sm font-medium text-accent-fg disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={onAudit}
+              disabled={auditing}
+              className="min-h-11 rounded-xs bg-ink px-5 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Check prices in the cloud
+              {auditing ? 'Checking prices…' : cloudConfigured ? 'Check prices in the cloud' : 'Check prices'}
             </button>
-            <p className="text-sm text-muted">Price checking isn’t connected yet.</p>
+            <p role="status" className={`text-sm ${auditError ? 'text-error' : 'text-muted'}`}>
+              {auditError ??
+                (cloudConfigured ? '' : 'The cloud check isn’t connected on this site yet, so prices are checked on this device.')}
+            </p>
           </div>
         </>
       )}

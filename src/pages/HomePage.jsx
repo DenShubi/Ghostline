@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import StepRail from '../components/StepRail.jsx'
 import ContractSheet from '../components/ContractSheet.jsx'
 import HandoffPreview from '../components/HandoffPreview.jsx'
+import AuditResults from '../components/AuditResults.jsx'
 import { runLocalPipeline } from '../services/localPipeline.js'
+import { isCloudConfigured, runPriceAudit } from '../services/auditHandoff.js'
 import { SAMPLE_CONTRACTS } from '../data/sampleContracts.js'
 
 const MAX_FILE_BYTES = 1024 * 1024
@@ -19,26 +21,42 @@ function fallbackNotice(reason, progress) {
   return 'This browser can’t run Gemini Nano, so the basic filter was used.'
 }
 
-export default function HomePage({ nano, onBusyChange }) {
+export default function HomePage({ nano, onActivityChange }) {
   const [text, setText] = useState('')
   const [stage, setStage] = useState('idle') // idle | redacting | extracting | done | error
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [report, setReport] = useState(null)
+  const [auditing, setAuditing] = useState(false)
+  const [auditError, setAuditError] = useState(null)
   const controller = useRef(null)
+  const auditController = useRef(null)
   const redactButton = useRef(null)
 
   const busy = BUSY.has(stage)
+  const activity = busy ? 'redacting' : auditing ? 'auditing' : null
   useEffect(() => {
-    onBusyChange?.(busy)
-  }, [busy, onBusyChange])
-  useEffect(() => () => controller.current?.abort(), [])
+    onActivityChange?.(activity)
+  }, [activity, onActivityChange])
+  useEffect(
+    () => () => {
+      controller.current?.abort()
+      auditController.current?.abort()
+    },
+    [],
+  )
 
   function reset() {
     controller.current?.abort()
     controller.current = null
+    auditController.current?.abort()
+    auditController.current = null
     setStage('idle')
     setResult(null)
     setError(null)
+    setReport(null)
+    setAuditing(false)
+    setAuditError(null)
   }
 
   function loadText(value) {
@@ -84,8 +102,31 @@ export default function HomePage({ nano, onBusyChange }) {
     }
   }
 
+  // T09: only `result.payload` (anonymous line items) ever reaches the audit.
+  async function handleAudit() {
+    auditController.current?.abort()
+    const ctrl = new AbortController()
+    auditController.current = ctrl
+    setAuditing(true)
+    setAuditError(null)
+    try {
+      const next = await runPriceAudit(result.payload, { signal: ctrl.signal })
+      if (!ctrl.signal.aborted) setReport(next)
+    } catch (err) {
+      if (ctrl.signal.aborted) return
+      console.error(err)
+      setAuditError(
+        err?.message?.startsWith('Privacy guard')
+          ? 'Stopped before sending: a line item still looks like it has contact details. Edit the original and try again.'
+          : 'The price check failed. Nothing personal was sent. Try again.',
+      )
+    } finally {
+      if (!ctrl.signal.aborted) setAuditing(false)
+    }
+  }
+
   const mode = result ? 'redacted' : busy ? 'busy' : 'edit'
-  const step = result ? 3 : busy ? 2 : 1
+  const step = report ? 4 : result ? 3 : busy ? 2 : 1
   const hidden = result ? Object.values(result.counts).reduce((a, b) => a + b, 0) : 0
   const showNanoHelp = result?.engine === 'fallback' && (result.engineReason === 'unsupported' || result.engineReason === 'unavailable')
 
@@ -162,7 +203,19 @@ export default function HomePage({ nano, onBusyChange }) {
         </div>
       )}
 
-      {result && <HandoffPreview result={result} />}
+      {report ? (
+        <AuditResults report={report} />
+      ) : (
+        result && (
+          <HandoffPreview
+            result={result}
+            onAudit={handleAudit}
+            auditing={auditing}
+            auditError={auditError}
+            cloudConfigured={isCloudConfigured}
+          />
+        )
+      )}
     </main>
   )
 }
