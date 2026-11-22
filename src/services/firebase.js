@@ -10,7 +10,7 @@
 
 import { getApp, getApps, initializeApp } from 'firebase/app'
 import { getAI, GoogleAIBackend } from 'firebase/ai'
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } from 'firebase/app-check'
 import { getFirestore } from 'firebase/firestore'
 
 const env = import.meta.env ?? {}
@@ -52,10 +52,15 @@ function setupAppCheck(firebaseApp) {
     return null
   }
 
-  return initializeAppCheck(firebaseApp, {
-    provider: new ReCaptchaV3Provider(recaptchaSiteKey || 'dev-debug-token-placeholder'),
-    isTokenAutoRefreshEnabled: true,
-  })
+  // The Firebase console registers web apps with "Fraud Defense" (reCAPTCHA
+  // Enterprise) by default; classic reCAPTCHA v3 keys are still supported.
+  const siteKey = recaptchaSiteKey || 'dev-debug-token-placeholder'
+  const provider =
+    env.VITE_FIREBASE_APPCHECK_PROVIDER === 'recaptcha-v3'
+      ? new ReCaptchaV3Provider(siteKey)
+      : new ReCaptchaEnterpriseProvider(siteKey)
+
+  return initializeAppCheck(firebaseApp, { provider, isTokenAutoRefreshEnabled: true })
 }
 
 export const appCheck = setupAppCheck(app)
