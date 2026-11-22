@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import StepRail from '../components/StepRail.jsx'
 import ContractSheet from '../components/ContractSheet.jsx'
 import HandoffPreview from '../components/HandoffPreview.jsx'
+import PublicAuditBrief from '../components/PublicAuditBrief.jsx'
 import { runLocalPipeline } from '../services/localPipeline.js'
+import { runCloudAudit } from '../services/cloudAuditService.js'
 import { SAMPLE_CONTRACTS } from '../data/sampleContracts.js'
 
 const MAX_FILE_BYTES = 1024 * 1024
@@ -19,26 +21,44 @@ function fallbackNotice(reason, progress) {
   return 'This browser can’t run Gemini Nano, so the basic filter was used.'
 }
 
-export default function HomePage({ nano, onBusyChange }) {
+export default function HomePage({ nano, onBusyChange, onCloudBusyChange }) {
   const [text, setText] = useState('')
   const [stage, setStage] = useState('idle') // idle | redacting | extracting | done | error
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [auditing, setAuditing] = useState(false)
+  const [auditReport, setAuditReport] = useState(null)
+  const [auditError, setAuditError] = useState(null)
   const controller = useRef(null)
+  const auditController = useRef(null)
   const redactButton = useRef(null)
 
   const busy = BUSY.has(stage)
   useEffect(() => {
     onBusyChange?.(busy)
   }, [busy, onBusyChange])
-  useEffect(() => () => controller.current?.abort(), [])
+  useEffect(() => {
+    onCloudBusyChange?.(auditing)
+  }, [auditing, onCloudBusyChange])
+  useEffect(
+    () => () => {
+      controller.current?.abort()
+      auditController.current?.abort()
+    },
+    [],
+  )
 
   function reset() {
     controller.current?.abort()
     controller.current = null
+    auditController.current?.abort()
+    auditController.current = null
     setStage('idle')
     setResult(null)
     setError(null)
+    setAuditing(false)
+    setAuditReport(null)
+    setAuditError(null)
   }
 
   function loadText(value) {
@@ -81,6 +101,27 @@ export default function HomePage({ nano, onBusyChange }) {
       console.error(err)
       setStage('idle')
       setError('Something went wrong while redacting. Nothing was sent anywhere. Try again.')
+    }
+  }
+
+  async function handleRunAudit() {
+    if (!result?.payload?.items?.length) return
+    auditController.current?.abort()
+    const ctrl = new AbortController()
+    auditController.current = ctrl
+    setAuditing(true)
+    setAuditError(null)
+
+    try {
+      const report = await runCloudAudit(result.payload, { signal: ctrl.signal })
+      if (ctrl.signal.aborted) return
+      setAuditReport(report)
+    } catch (err) {
+      if (ctrl.signal.aborted) return
+      console.error('[HomePage] Cloud audit failed:', err)
+      setAuditError(err?.message || 'Could not complete the cloud price check. Try again.')
+    } finally {
+      if (!ctrl.signal.aborted) setAuditing(false)
     }
   }
 
@@ -162,7 +203,17 @@ export default function HomePage({ nano, onBusyChange }) {
         </div>
       )}
 
-      {result && <HandoffPreview result={result} />}
+      {result && (
+        <HandoffPreview
+          result={result}
+          onRunAudit={handleRunAudit}
+          auditing={auditing}
+          auditError={auditError}
+          hasAuditReport={Boolean(auditReport)}
+        />
+      )}
+
+      {auditReport && <PublicAuditBrief report={auditReport} />}
     </main>
   )
 }
