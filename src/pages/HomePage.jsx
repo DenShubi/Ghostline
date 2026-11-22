@@ -3,6 +3,7 @@ import StepRail from '../components/StepRail.jsx'
 import ContractSheet from '../components/ContractSheet.jsx'
 import HandoffPreview from '../components/HandoffPreview.jsx'
 import AuditResults from '../components/AuditResults.jsx'
+import PublicAuditBrief from '../components/PublicAuditBrief.jsx'
 import { runLocalPipeline } from '../services/localPipeline.js'
 import { isCloudConfigured, runPriceAudit } from '../services/auditHandoff.js'
 import { SAMPLE_CONTRACTS } from '../data/sampleContracts.js'
@@ -204,7 +205,10 @@ export default function HomePage({ nano, onActivityChange }) {
       )}
 
       {report ? (
-        <AuditResults report={report} />
+        <>
+          <AuditResults report={report} />
+          <PublicAuditBrief report={report} showFigures={false} canPublish={isCloudConfigured} />
+        </>
       ) : (
         result && (
           <HandoffPreview

@@ -65,7 +65,11 @@ export default function HandoffPreview({ result, onAudit, auditing, auditError, 
             </button>
             <p role="status" className={`text-sm ${auditError ? 'text-error' : 'text-muted'}`}>
               {auditError ??
-                (cloudConfigured ? '' : 'The cloud check isn’t connected on this site yet, so prices are checked on this device.')}
+                (!cloudConfigured
+                  ? 'The cloud check isn’t connected on this site yet, so prices are checked on this device.'
+                  : auditing
+                    ? 'Comparing anonymised line items against Firestore benchmarks…'
+                    : 'Sends only the table above to Cloud Gemini and Firestore.')}
             </p>
           </div>
         </>
