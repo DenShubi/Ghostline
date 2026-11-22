@@ -74,9 +74,9 @@ export default function HomePage({ nano, onActivityChange }) {
     loadText(await file.text())
   }
 
-  function handleExample() {
+  function handleExample(sample = SAMPLE_CONTRACTS[0]) {
     nano.prepare()
-    loadText(SAMPLE_CONTRACTS[0].text)
+    loadText(sample.text)
     requestAnimationFrame(() => redactButton.current?.focus())
   }
 
@@ -150,6 +150,7 @@ export default function HomePage({ nano, onActivityChange }) {
           setText(value)
           if (error) setError(null)
         }}
+        examples={SAMPLE_CONTRACTS}
         onExample={handleExample}
         onFile={handleFile}
         onEdit={reset}
