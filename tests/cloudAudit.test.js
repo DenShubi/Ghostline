@@ -200,8 +200,9 @@ test('runCloudAudit times out a hanging Cloud Gemini call instead of stalling fo
 test('all 3 pre-loaded sample contracts redact PII, extract 5 items, and audit accurately', () => {
   assert.equal(SAMPLE_CONTRACTS.length, 3)
 
-  const expectedTotals = [648020, 129240, 188830]
-  const expectedLeakages = [351140, 52800, 52080]
+  const expectedTotals = [648020, 129240, 144355]
+  const expectedLeakages = [351140, 52800, 0]
+  const expectedRisk = ['critical', 'critical', 'low'] // sample 3 is the fair-price control
 
   SAMPLE_CONTRACTS.forEach((sample, idx) => {
     const { redactedText, counts } = redactText(sample.text)
@@ -217,6 +218,6 @@ test('all 3 pre-loaded sample contracts redact PII, extract 5 items, and audit a
     const summary = summarizeAuditItems(evaluated)
     assert.equal(summary.totalContractValue, expectedTotals[idx], `${sample.id} total mismatch`)
     assert.equal(summary.totalEstimatedLeakage, expectedLeakages[idx], `${sample.id} leakage mismatch`)
-    assert.equal(summary.overallRiskLevel, 'critical', `${sample.id} should flag critical risk`)
+    assert.equal(summary.overallRiskLevel, expectedRisk[idx], `${sample.id} overall risk mismatch`)
   })
 })
