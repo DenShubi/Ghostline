@@ -3,7 +3,13 @@ import { formatCount, formatUSD } from '../utils/currencyFormatter.js'
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 /** Step 3: exactly what would cross to the cloud, and nothing else. */
-export default function HandoffPreview({ result }) {
+export default function HandoffPreview({
+  result,
+  onRunAudit,
+  auditing = false,
+  auditError = null,
+  hasAuditReport = false,
+}) {
   const { payload, counts, networkRequests } = result
   const kept = Object.values(counts).reduce((a, b) => a + b, 0)
   const hasItems = payload.items.length > 0
@@ -57,12 +63,22 @@ export default function HandoffPreview({ result }) {
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
             <button
               type="button"
-              disabled
-              className="min-h-11 rounded-xs bg-ink px-5 text-sm font-medium text-accent-fg disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={onRunAudit}
+              disabled={auditing || !onRunAudit}
+              className="min-h-11 rounded-xs bg-ink px-5 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Check prices in the cloud
+              {auditing
+                ? 'Checking prices in the cloud…'
+                : hasAuditReport
+                  ? 'Re-run cloud price check'
+                  : 'Check prices in the cloud'}
             </button>
-            <p className="text-sm text-muted">Price checking isn’t connected yet.</p>
+            <p role="status" className={`text-sm ${auditError ? 'text-error' : 'text-muted'}`}>
+              {auditError ??
+                (auditing
+                  ? 'Comparing anonymised line items against Firestore benchmarks…'
+                  : 'Sends only the table above to Cloud Gemini and Firestore.')}
+            </p>
           </div>
         </>
       )}
