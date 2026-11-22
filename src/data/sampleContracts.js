@@ -22,7 +22,7 @@ Line items
 4. 1500VA Uninterruptible Power Supply (UPS) - Qty: 20 - Unit price: $215.00
 5. Monochrome Laser Office Printer (duplex) - Qty: 12 - Unit price: $290.00
 
-Total contract value: $669,700.00
+Total contract value: $648,020.00
 Delivery questions go to Ms. Ellison before 15 December 2026.`,
   },
 ]
