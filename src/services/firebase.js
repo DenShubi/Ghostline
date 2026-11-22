@@ -13,13 +13,15 @@ import { getAI, GoogleAIBackend } from 'firebase/ai'
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 import { getFirestore } from 'firebase/firestore'
 
+const env = import.meta.env ?? {}
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: env.VITE_FIREBASE_API_KEY,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.VITE_FIREBASE_APP_ID,
 }
 
 export const isFirebaseConfigured = Boolean(
@@ -36,14 +38,14 @@ export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfi
 function setupAppCheck(firebaseApp) {
   if (typeof window === 'undefined') return null
 
-  const debugEnv = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN
-  if (import.meta.env.DEV) {
+  const debugEnv = env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN
+  if (env.DEV) {
     self.FIREBASE_APPCHECK_DEBUG_TOKEN =
       debugEnv && debugEnv !== 'true' ? debugEnv : true
   }
 
-  const recaptchaSiteKey = import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY
-  if (!import.meta.env.DEV && !recaptchaSiteKey) {
+  const recaptchaSiteKey = env.VITE_FIREBASE_RECAPTCHA_SITE_KEY
+  if (!env.DEV && !recaptchaSiteKey) {
     console.warn(
       '[firebase] App Check skipped in production: set VITE_FIREBASE_RECAPTCHA_SITE_KEY to enforce App Check.',
     )
