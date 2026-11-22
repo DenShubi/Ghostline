@@ -1,9 +1,11 @@
 /**
- * True for errors worth one more try: rate limits and server-side overload
- * (e.g. Gemini's 500 "This model is currently experiencing high demand").
+ * True for errors worth one more try: server-side overload (e.g. Gemini's 500
+ * "This model is currently experiencing high demand"). 429 is excluded: on the
+ * free tier it usually means the daily quota is spent, and a retry only burns
+ * another request.
  */
 export function isTransientError(err) {
-  return /\[(429|500|502|503|504)\b/.test(String(err?.message ?? ''))
+  return /\[(500|502|503|504)\b/.test(String(err?.message ?? ''))
 }
 
 /**

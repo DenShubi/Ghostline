@@ -5,10 +5,10 @@ import { isTransientError, withRetry } from '../src/utils/retry.js'
 const highDemand = new Error('AI: Error fetching from …/gemini-3.8-flash:generateContent: [500 ] This model is currently experiencing high demand.')
 const notFound = new Error('AI: Error fetching … [404 ] models/x is not found')
 
-test('classifies rate limits and overload as transient, not 4xx client errors', () => {
+test('retries server overload only, not quota or other 4xx errors', () => {
   assert.equal(isTransientError(highDemand), true)
-  assert.equal(isTransientError(new Error('[429 ] Resource exhausted')), true)
   assert.equal(isTransientError(new Error('[503 ] Unavailable')), true)
+  assert.equal(isTransientError(new Error('[429 ] You exceeded your current quota … per day limit exceeded on Free Tier')), false)
   assert.equal(isTransientError(notFound), false)
   assert.equal(isTransientError(new Error('[401 ] Firebase App Check token is invalid.')), false)
   assert.equal(isTransientError(undefined), false)
