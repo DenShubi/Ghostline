@@ -1,98 +1,86 @@
 # Ghostline
 
-Whistleblower-safe public budget and procurement auditor, built for #BuildHybridAI 2026. **Gemini Nano (on-device)** redacts PII in the browser, and only anonymised line items go to **Cloud Gemini + Firestore** (via Firebase AI Logic) for price benchmarking.
+**Audit the prices. Protect the source.**
 
-> Team: Denin (On-Device AI & Frontend) · Kahfi (Firebase & Cloud Audit Engine)
+Ghostline checks a public procurement contract for overpricing without exposing the people in it. Names, ID numbers, emails and phone numbers are blacked out on your own device. Only the anonymous line items (item, quantity, unit price) are sent to the cloud, where they are compared with fair market prices.
 
-## Quick start
+**Try it:** https://auditzero-ghostline-2026.web.app
+
+Built for journalists, watchdogs and whistleblowers who want a second opinion on a leaked contract without putting a source at risk.
+
+## How it works
+
+1. **Paste.** Paste contract or tender text, upload a CSV, or pick one of the three sample contracts.
+2. **Redact, on your device.** Chrome's built-in Gemini Nano finds the personal details and Ghostline replaces them with black bars. It then reads the line items. Nothing is sent anywhere during this step; the page shows the number of network requests it made (always 0).
+3. **Check prices, in the cloud.** Only the line-item table goes to Cloud Gemini (via Firebase AI Logic), which matches each item to a USD market benchmark stored in Firestore. Ghostline then shows the estimated overpayment and every item compared with its fair price.
+
+The header always tells you where work is happening: **On-device** while redacting, **Cloud Gemini** while checking prices.
+
+## Reading the results
+
+| Label | Meaning |
+|---|---|
+| **Critical** | Above the fair price range and at least 60% over the market average |
+| **Moderate** | Above the fair price range, less than 60% over the average |
+| **Normal** | Within the fair price range |
+| **No benchmark** | No comparable item in the benchmark list, so it isn't scored |
+
+**Estimated overpayment** adds up `(unit price − market average) × quantity` for every Critical and Moderate item. All numbers are calculated by Ghostline from the benchmark data, never by the AI model. The AI only matches items to benchmarks and writes the summary.
+
+Results are an early signal for further checking, not proof of wrongdoing.
+
+## Privacy
+
+- **Stays on your device:** the original text and every personal detail found in it.
+- **Sent to the cloud:** the line-item table shown in step 3, nothing else. It is checked again for emails and phone numbers right before sending, and blocked if any are found.
+- **Published briefs** (optional, the *Publish & copy share link* button) store the anonymous results in Firestore. Anyone with the link can read them.
+- Always read the redacted copy before checking prices. Automatic redaction can miss things, especially without Gemini Nano (see below).
+
+## Full on-device redaction with Gemini Nano
+
+Ghostline works in any modern browser. Without Gemini Nano it uses a simpler built-in filter that catches emails, phone numbers, ID numbers and names that follow a cue such as "Mr." or "Approved by". Names without a cue can slip through, and the page tells you when this filter was used.
+
+To get Gemini Nano in desktop Chrome:
+
+1. Open `chrome://flags/#optimization-guide-on-device-model` and choose **Enabled BypassPerfRequirement**.
+2. Open `chrome://flags/#prompt-api-for-gemini-nano` and choose **Enabled**.
+3. Relaunch Chrome and open Ghostline. Click **Redact** once to start the model download, then wait until the header reads **On-device · Gemini Nano**.
+
+Chrome downloads the model once (a few GB) and needs about 22 GB of free disk space before it will start. You can follow the download at `chrome://on-device-internals`.
+
+## Limits
+
+- English contracts priced in USD.
+- Plain text or CSV. Scanned PDFs and images are not supported.
+- 40 market benchmarks across IT hardware, medical equipment, office supplies and classroom equipment.
+
+## Run it yourself
+
+Requires Node.js 18+ and a Firebase project with Firestore and Firebase AI Logic (Gemini Developer API) enabled.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build
-npm run lint
-npm test         # node --test, no extra deps
+cp .env.example .env        # fill in your Firebase web app config
+npm run seed:benchmarks     # load the 40 benchmarks into Firestore
+npm run dev                 # http://localhost:5173
 ```
 
-Requires Node.js 18+. Design rules live in [DESIGN.md](DESIGN.md).
+Seed the benchmarks before deploying `firestore.rules`: the rules make `price_benchmarks` read-only, so the seed script is refused afterwards.
 
-## Enabling Gemini Nano
+Without the Firebase values in `.env`, the app still runs: prices are then checked on your device against the built-in benchmark list, and the page says so.
 
-1. Use a recent desktop Chrome (Canary/Dev recommended). The model needs ~22 GB of free disk space.
-2. `chrome://flags/#optimization-guide-on-device-model` → **Enabled BypassPerfRequirement**
-3. `chrome://flags/#prompt-api-for-gemini-nano` → **Enabled**
-4. Relaunch Chrome. The header status should read **On-device · Gemini Nano**.
+| Command | What it does |
+|---|---|
+| `npm test` | Unit and pipeline tests |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build in `dist/` |
+| `firebase deploy --only hosting` | Publish `dist/` to Firebase Hosting |
+| `firebase deploy --only firestore:rules` | Publish `firestore.rules` |
 
-To verify local inference (dev server only), open the DevTools console and run:
+CSV uploads are read by column name. Use headers such as `Item`, `Specs`, `Qty` and `Unit Price`; other columns are redacted and ignored.
 
-```js
-await ghostline.testNano()   // → { output, entities, ms, simulated: false }
-```
+## Built with
 
-The first call starts the model download. Without Nano, the app uses a local pattern filter (`simulated: true`). Raw text never leaves the device in either case.
+React 18, Vite, Tailwind CSS · Chrome Prompt API (Gemini Nano) · Firebase AI Logic (Cloud Gemini), Firestore, App Check and Hosting.
 
-## How local redaction works
-
-```
-raw text ─► PII spans: Gemini Nano (JSON schema) + regex safety net ─► redacted text
-         ─► line items: CSV columns │ Gemini Nano │ line parser
-         ─► final scrub of every string ─► anonymous payload { projectTitle, currency, items[] }
-```
-
-- Nano only **reports** which spans are personal data; the replacement is done in code, so prices can't be altered.
-- The regex net catches emails, phones, IDs and names after cues like "Mr." or "Approved by" even if Nano misses them.
-- The UI shows the observed number of network requests during redaction (PerformanceObserver). It should always be 0.
-- Nano is used only when fully downloaded. While it is missing or still downloading, the basic filter runs at once and the header shows download progress; each Nano step also has a 25 s timeout.
-
-## Price check (Phase 3)
-
-`runPriceAudit(result.payload)` in `src/services/auditHandoff.js` is the only way line items leave the local pipeline.
-
-- **Firebase env vars set** (`VITE_FIREBASE_*` from `.env.example`, also in Vercel → Settings → Environment Variables): Cloud Gemini matches items against Firestore `price_benchmarks`. If Firestore is empty or unreachable it uses the bundled `seedBenchmarks.json`; if Gemini fails it matches by name.
-- **No env vars** (e.g. a preview deploy): the check runs on the device against the bundled 40 benchmarks and the UI says so. No request is made.
-- Markups, risk levels and the overpayment total are always computed in code (`utils/pricingAudit.js`), never by the model.
-
-## Privacy rule
-
-Raw contract text must only reach `src/services/localPipeline.js` and `localNanoService.js`. Only `result.payload` may be handed to the cloud. If redaction is ever routed through Firebase AI Logic's hybrid mode, it **must** use `ONLY_ON_DEVICE`, never `PREFER_ON_DEVICE`, because that silently falls back to the cloud with PII.
-
-## Project structure
-
-```
-src/
-├── components/
-│   ├── Navbar.jsx · HybridStatusBadge.jsx   # always-visible local / cloud status
-│   ├── StepRail.jsx                         # 1 Paste · 2 Redact | 3 Check prices (device/cloud boundary)
-│   ├── ContractSheet.jsx                    # one sheet: edit → working → redacted copy
-│   ├── RedactedText.jsx                     # ink redaction bars
-│   ├── HandoffPreview.jsx                   # step 3: the only table that crosses to the cloud
-│   ├── AuditResults.jsx                     # price check: LeakageCounterCard + MarkupAlertTable
-│   └── RiskTag.jsx                          # Critical / Moderate / Normal / No benchmark
-├── hooks/useNanoModel.js                    # Nano status + download progress
-├── services/
-│   ├── localNanoService.js                  # Prompt API: PII detection, item extraction
-│   ├── localPipeline.js                     # raw text → anonymous payload
-│   ├── auditHandoff.js                      # payload → price audit (cloud, or on-device without Firebase env)
-│   ├── cloudAuditService.js                 # Kahfi: Cloud Gemini + benchmark matching
-│   ├── firebase.js · benchmarkService.js    # Kahfi
-├── utils/ redaction · itemExtraction · csvParser · currencyFormatter
-├── data/ seedBenchmarks.json · sampleContracts.js (1 demo; T12 adds more)
-tests/                                       # npm test
-scripts/seedFirestore.js
-```
-
-## Sprint status
-
-| ID | Task | Owner | Status |
-|----|------|-------|--------|
-| T01 | Repo & React + Vite + Tailwind setup | Denin | ✅ Done |
-| T02 | Verify Chrome Gemini Nano local inference | Denin | 🟡 Code done; run `ghostline.testNano()` on a Nano-enabled Chrome |
-| T03 | Firebase setup (Firestore, App Check, AI Logic, Hosting) | Kahfi | ✅ Merged (PR #1) |
-| T04 | Seed Firestore with 30–50 USD benchmarks | Kahfi | ✅ 40 benchmarks |
-| T05 | Split-screen redaction UI & CSV/text input | Denin | ✅ Done |
-| T06 | Gemini Nano PII redaction & JSON extraction | Denin | 🟡 Done; tested with mocked Nano + fallback, needs a run on real Nano |
-| T07 | Local vs. cloud & "0 PII sent" indicators | Denin | ✅ Done |
-| T08 | Cloud Gemini anomaly detection & benchmark logic | Kahfi | ✅ Merged (PR #2) |
-| T09 | Sanitized JSON handoff to Cloud Gemini + Firestore | Both | ✅ Done; live cloud path needs Firebase env vars |
-| T10 | Markup alert table & total leakage counter | Denin | ✅ Done |
-| T11 | Public Audit Brief view & Firestore save/share | Kahfi | ⬜ |
+Design decisions are documented in [DESIGN.md](DESIGN.md).
